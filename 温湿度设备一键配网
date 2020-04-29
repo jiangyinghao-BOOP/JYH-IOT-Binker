@@ -3,14 +3,14 @@
 #include <Blinker.h>//包含Blinker头文件
 #include <DHT.h>//包含DHT头文件
 
-#define DHTPIN 13      //定义DHT11模块连接管脚io2
+#define DHTPIN 13      //定义DHT11模块连接管脚D7引脚
  
 #define DHTTYPE DHT11   // 使用温度湿度模块的类型为DHT11
 
 int count=0;
 bool WIFI_Status = true;
 
-char auth[] = "7befc2ab6b11";  //你的设备key
+char auth[] = "***********";  //你的设备key
 
  //新建数据类型组件对象，作用：将数据传输到手机blinker app
 BlinkerNumber HUMI("humi");    //定义湿度数据键名
