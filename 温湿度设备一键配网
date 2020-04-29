@@ -1,0 +1,111 @@
+#define BLINKER_WIFI //定义wifi模块
+
+#include <Blinker.h>//包含Blinker头文件
+#include <DHT.h>//包含DHT头文件
+
+#define DHTPIN 13      //定义DHT11模块连接管脚io2
+ 
+#define DHTTYPE DHT11   // 使用温度湿度模块的类型为DHT11
+
+int count=0;
+bool WIFI_Status = true;
+
+char auth[] = "7befc2ab6b11";  //你的设备key
+
+ //新建数据类型组件对象，作用：将数据传输到手机blinker app
+BlinkerNumber HUMI("humi");    //定义湿度数据键名
+BlinkerNumber TEMP("temp");    //定义温度数据键名
+   
+DHT dht(DHTPIN, DHTTYPE);    //定义dht
+ 
+float humi_read = 0, temp_read = 0;//定义浮点型全局变量 储存传感器读取的温湿度数据
+ 
+void heartbeat()
+{
+    HUMI.print(humi_read);        //给blinkerapp回传湿度数据
+    TEMP.print(temp_read);        //给blinkerapp回传温度数据
+}
+void smartConfig()//配网函数
+{
+  WiFi.mode(WIFI_STA);//使用wifi的STA模式
+  Serial.println("\r\nWait for Smartconfig...");//串口打印
+  WiFi.beginSmartConfig();//等待手机端发出的名称与密码
+  //死循环，等待获取到wifi名称和密码
+  while (1)
+  {
+    //等待过程中一秒打印一个.
+    Serial.print(".");
+    delay(1000);                                             
+    if (WiFi.smartConfigDone())//获取到之后退出等待
+    {
+      Serial.println("SmartConfig Success");
+      //打印获取到的wifi名称和密码
+      Serial.printf("SSID:%s\r\n", WiFi.SSID().c_str());
+      Serial.printf("PSW:%s\r\n", WiFi.psk().c_str());
+      break;
+    }
+  }
+}
+void WIFI_Init()
+{
+    Serial.println("\r\n正在连接");
+    //当设备没有联网的情况下，执行下面的操作
+    while(WiFi.status()!=WL_CONNECTED)
+    {
+        if(WIFI_Status)//WIFI_Status为真,尝试使用flash里面的信息去 连接路由器
+        {
+            Serial.print(".");
+            delay(1000);                                        
+            count++;
+            if(count>=5)
+            {
+                WIFI_Status = false;
+                Serial.println("WiFi连接失败，请用手机进行配网"); 
+            }
+        }
+        else//使用flash中的信息去连接wifi失败，执行
+        {
+            smartConfig();  //smartConfig技术配网
+        }
+     }  
+     //串口打印连接成功的IP地址
+     Serial.println("连接成功");  
+     Serial.print("IP:");
+     Serial.println(WiFi.localIP());
+}
+
+void setup()//将设置代码放在此处，运行一次；
+{
+    //初始化端口
+    Serial.begin(115200);
+    BLINKER_DEBUG.stream(Serial);
+    BLINKER_DEBUG.debugAll();
+    
+    WIFI_Init();//调用WIFI函数
+    Blinker.begin(auth, WiFi.SSID().c_str(), WiFi.psk().c_str());//运行blinker
+    dht.begin();//初始化DHT传感器
+    Blinker.attachHeartbeat(heartbeat);//将传感器获取的数据传给blinker app上
+}
+
+//通过循环不断读取温湿度传感器获取的数据
+void loop() //把主代码放在这里，重复运行：
+{
+    Blinker.run();//运行Blinker
+ 
+    float h = dht.readHumidity();//读取DHT11传感器的湿度 并赋值给h
+    float t = dht.readTemperature();//读取传感器的温度   并赋值给t
+    if (isnan(h) || isnan(t))//判断是否成功读取到温湿度数据
+    {
+        BLINKER_LOG("Failed to read from DHT sensor!");//读取温湿度失败！
+    }
+    else//成功读取到数据
+    {   
+        //打印
+        BLINKER_LOG("Humidity: ", h, " %");
+        BLINKER_LOG("Temperature: ", t, " *C");
+        
+        humi_read = h;//将读取到的湿度赋值给全局变量humi_read
+        temp_read = t;//将读取到的温度赋值给全局变量temp_read
+    }
+    Blinker.delay(2000);//2秒延时
+}
