@@ -7,9 +7,9 @@
  
 #define DHTTYPE DHT11   // 使用温度湿度模块的类型为DHT11
 
-char auth[] = "7befc2ab6b11";  //你的设备key
-char ssid[] = "CU_Kzjh";  //你的wifi 名称
-char pswd[] = "s7rt4qzp";  //你的wifi 密码
+char auth[] = "*********";  //你的设备key
+char ssid[] = "*********";  //你的wifi 名称
+char pswd[] = "*********";  //你的wifi 密码
 
  //新建数据类型组件对象，作用：将数据传输到手机blinker app
 BlinkerNumber HUMI("humi");    //定义湿度数据键名
