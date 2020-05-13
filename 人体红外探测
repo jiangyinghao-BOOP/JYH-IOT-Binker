@@ -1,0 +1,48 @@
+//没有加延时函数，需要的话自行修改
+
+#define BLINKER_WIFI //定义wifi模块
+#include <Blinker.h>
+
+char auth[] = "**********";  //你的设备key
+char ssid[] = "**********";  //你的wifi 名称
+char pswd[] = "**********";  //你的wifi 密码
+
+//新建数据类型组件对象，
+//作用：将文本数据传输到手机blinker app
+BlinkerText BODY("body");    //定义湿度数据键名
+int bodySensorData=0;
+//将人体红外传感器的数据回传给Blinker_APP   
+void heartbeat()
+{
+  if(bodySensorData==0)
+  {
+    BODY.print("无人进入");
+  }else{
+    BODY.print("有人进入");
+  }
+}
+void setup() {
+    //初始化串口
+    Serial.begin(115200);
+    BLINKER_DEBUG.stream(Serial);
+    BLINKER_DEBUG.debugAll();
+    Blinker.begin(auth, ssid, pswd); // 初始化blinker 
+    Blinker.attachHeartbeat(heartbeat);//将传感器获取的数据传给blinker app上  
+}
+void loop() 
+{
+  Blinker.run();//运行Blinker
+ //定义发量i
+  int  BodySensor_value=analogRead(A0);//读取模拟5口电压值
+  Serial.print("模拟电压值:");
+  Serial.print(BodySensor_value);
+  Serial.print("\n");
+  if(BodySensor_value>512) 
+  { 
+    bodySensorData=1;
+    Serial.print("有人进入\n");
+  }else{
+    bodySensorData=0;
+    Serial.print("无人进入\n");
+    }
+}
